@@ -1,0 +1,44 @@
+[
+  {
+    "id": "242-35-243",
+    "name": "Tehari",
+    "price": 100,
+    "available": true
+  },
+  {
+    "id": "242-35-296",
+    "name": "Porota",
+    "price": 10,
+    "available": true
+  },
+  {
+    "id": "242-35-001",
+    "name": "Dim Bhaji",
+    "price": 20,
+    "available": true
+  },
+  {
+    "id": "242-35-004",
+    "name": "Egg Sandwich",
+    "price": 50,
+    "available": true
+  },
+  {
+    "id": "242-35-006",
+    "name": "Vegetable Roll",
+    "price": 40,
+    "available": true
+  },
+  {
+    "id": "242-35-003",
+    "name": "Chicken",
+    "price": 70,
+    "available": true
+  },
+  {
+    "id": "242-35-005",
+    "name": "Singara",
+    "price": 10,
+    "available": true
+  }
+]
