@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canteen Admin Panel</title>
+</head>
+
+<body>
+
+  <h1>Canteen Admin Panel</h1>
+
+  <button onclick="loadOrders()">Refresh Orders</button>
+
+  <table border="1" cellpadding="10">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Student</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Pickup Time</th>
+        <th>Status</th>
+        <th>Update</th>
+      </tr>
+    </thead>
+
+    <tbody id="ordersTable">
+      <tr>
+        <td colspan="7">Loading...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function loadOrders() {
+      try {
+        const response = await fetch("/api/orders");
+        const orders = await response.json();
+
+        const table = document.getElementById("ordersTable");
+
+        table.innerHTML = "";
+
+        orders.forEach(order => {
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td>${order.id}</td>
+            <td>${order.studentName}</td>
+            <td>${order.items}</td>
+            <td>${order.totalPrice}</td>
+            <td>${order.pickupTime}</td>
+
+            <td>
+              ${order.status}
+            </td>
+
+            <td>
+              <select id="status-${order.id}">
+                <option value="Pending"
+                  ${order.status === "Pending" ? "selected" : ""}>
+                  Pending
+                </option>
+
+                <option value="Preparing"
+                  ${order.status === "Preparing" ? "selected" : ""}>
+                  Preparing
+                </option>
+
+                <option value="Ready"
+                  ${order.status === "Ready" ? "selected" : ""}>
+                  Ready
+                </option>
+
+                <option value="Completed"
+                  ${order.status === "Completed" ? "selected" : ""}>
+                  Completed
+                </option>
+              </select>
+
+              <button onclick="updateStatus(${order.id})">
+                Update
+              </button>
+            </td>
+          `;
+
+          table.appendChild(row);
+        });
+
+      } catch (error) {
+        console.error(error);
+        alert("Failed to load orders");
+      }
+    }
+
+    async function updateStatus(orderId) {
+
+      const status = document.getElementById(
+        `status-${orderId}`
+      ).value;
+
+      try {
+
+        const response = await fetch(
+          `/api/orders/${orderId}/status`,
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              status: status
+            })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          alert(result.error);
+          return;
+        }
+
+        alert(result.message);
+
+        loadOrders();
+
+      } catch (error) {
+        console.error(error);
+        alert("Failed to update status");
+      }
+    }
+
+    // Load orders when page opens
+    loadOrders();
+  </script>
+
+</body>
+</html>
