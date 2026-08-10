@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Canteen Preorder</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Canteen Preorder</h1>
+
+        <button onclick="showCart()">
+            Cart (<span id="cartCount">0</span>)
+        </button>
+    </header>
+
+
+    <!-- Menu -->
+    <main>
+
+        <h2>Today's Menu</h2>
+
+        <div id="menuStatus">
+            Loading menu...
+        </div>
+
+        <div id="menuContainer" hidden>
+        </div>
+
+    </main>
+
+
+    <!-- Cart -->
+    <div id="cartBox">
+
+        <h2>Your Cart</h2>
+
+
+        <!-- Empty Cart -->
+        <div id="cartEmpty">
+            Cart is empty.
+            <br>
+            Add something from the menu.
+        </div>
+
+
+        <!-- Cart Items -->
+        <div id="cartItems">
+        </div>
+
+
+        <!-- Customer Information -->
+        <div id="cartFooterFields" hidden>
+
+            <label>
+                Name:
+                <input
+                    id="customerName"
+                    type="text"
+                    placeholder="Enter your name">
+            </label>
+
+            <br><br>
+
+            <label>
+                Table / Roll No:
+                <input
+                    id="customerTable"
+                    type="text"
+                    placeholder="Enter table or roll">
+            </label>
+
+        </div>
+
+
+        <!-- Total -->
+        <div id="cartTotalRow" hidden>
+
+            <b>Total:</b>
+
+            ৳<span id="totalPrice">0</span>
+
+        </div>
+
+
+        <!-- Order Message -->
+        <div id="orderMsg" hidden>
+        </div>
+
+
+        <!-- Place Order -->
+        <button
+            id="placeOrderBtn"
+            onclick="placeOrder()"
+            hidden>
+            Place Order
+        </button>
+
+
+        <!-- Close Cart -->
+        <button onclick="closeCart()">
+            Close
+        </button>
+
+    </div>
+
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>
