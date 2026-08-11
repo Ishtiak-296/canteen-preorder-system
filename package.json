@@ -1,5 +1,17 @@
 {
+<<<<<<< HEAD
   "dependencies": {
     "express": "^5.2.1"
+=======
+  "name": "canteen-preorder",
+  "version": "1.0.0",
+  "description": "Canteen Food Preorder System - Beginner Fullstack Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+>>>>>>> c1cf53a0fded7bf824333f318390367c995d03fa
   }
 }
