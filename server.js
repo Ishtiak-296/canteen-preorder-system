@@ -1,416 +1,121 @@
+// ============================================
+// CANTEEN FOOD PREORDER SYSTEM - Backend Server
+// ============================================
+// Ei file ta backend er "brain". Eikhane shob API route define kora ache.
+// API route mane holo, frontend theke ei address gulate request pathale
+// backend ki response debe.
+
 const express = require("express");
-const db = require("./database");
+const fs = require("fs"); // file read/write korar jonno (json data store)
 const path = require("path");
 
 const app = express();
-const PORT = 4000;
+const PORT = 3000;
 
-// ==============================
-// Middleware
-// ==============================
+// Middleware: frontend theke asha JSON data bujhte help kore
 app.use(express.json());
+
+// public folder er shob file (html, css, js) directly serve hobe
 app.use(express.static(path.join(__dirname, "public")));
 
-// ==============================
-// Simple Admin Protection
-// ==============================
-const ADMIN_KEY = "canteen-secret-123";
+// data file er path
+const MENU_FILE = path.join(__dirname, "data", "menu.json");
+const ORDERS_FILE = path.join(__dirname, "data", "orders.json");
 
-function requireAdmin(req, res, next) {
-    const key = req.headers["x-admin-key"];
-
-    if (key !== ADMIN_KEY) {
-        return res.status(401).json({
-            error: "Unauthorized: invalid or missing admin key"
-        });
-    }
-
-    next();
+// ---------- Helper functions: JSON file read/write ----------
+function readJSON(filePath) {
+  const data = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(data);
 }
 
-// ==============================
-// HOME ROUTE
-// ==============================
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+function writeJSON(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
 
-// ==============================
+// =========================================================
 // MENU ROUTES
-// ==============================
+// =========================================================
 
-// Get all menu items
+// GET /api/menu -> shob menu item dekhabe (student side use kore)
 app.get("/api/menu", (req, res) => {
-    try {
-        const menu = db.prepare("SELECT * FROM menu").all();
-        res.json(menu);
-    } catch (error) {
-        console.error("GET MENU ERROR:", error);
-        res.status(500).json({
-            error: "Could not get menu"
-        });
-    }
+  const menu = readJSON(MENU_FILE);
+  res.json(menu);
 });
 
-// Get single menu item
-app.get("/api/menu/:id", (req, res) => {
-    try {
-        const item = db
-            .prepare("SELECT * FROM menu WHERE id = ?")
-            .get(req.params.id);
-
-        if (!item) {
-            return res.status(404).json({
-                error: "Item not found"
-            });
-        }
-
-        res.json(item);
-    } catch (error) {
-        console.error("GET MENU ITEM ERROR:", error);
-        res.status(500).json({
-            error: "Could not get item"
-        });
-    }
+// POST /api/menu -> notun menu item add korbe (admin side use kore)
+app.post("/api/menu", (req, res) => {
+  const menu = readJSON(MENU_FILE);
+  const newItem = {
+    id: Date.now(), // simple unique id
+    name: req.body.name,
+    price: req.body.price,
+    available: true,
+  };
+  menu.push(newItem);
+  writeJSON(MENU_FILE, menu);
+  res.status(201).json(newItem);
 });
 
-// Add menu item
-app.post("/api/menu", requireAdmin, (req, res) => {
-    try {
-        const { id, name, price, stock, available } = req.body;
+// PUT /api/menu/:id -> item available/unavailable toggle korbe (admin)
+app.put("/api/menu/:id", (req, res) => {
+  const menu = readJSON(MENU_FILE);
+  const item = menu.find((m) => m.id == req.params.id);
+  if (!item) return res.status(404).json({ error: "Item not found" });
 
-        if (!id || !name || price === undefined) {
-            return res.status(400).json({
-                error: "id, name and price are required"
-            });
-        }
-
-        db.prepare(`
-            INSERT INTO menu (id, name, price, stock, available)
-            VALUES (?, ?, ?, ?, ?)
-        `).run(
-            id,
-            name,
-            price,
-            stock ?? 0,
-            available === undefined ? 1 : (available ? 1 : 0)
-        );
-
-        const item = db
-            .prepare("SELECT * FROM menu WHERE id = ?")
-            .get(id);
-
-        res.status(201).json(item);
-
-    } catch (error) {
-        console.error("MENU POST ERROR:", error.message);
-
-        res.status(500).json({
-            error: error.message
-        });
-    }
+  item.available = req.body.available;
+  writeJSON(MENU_FILE, menu);
+  res.json(item);
 });
 
-// Update menu item
-app.put("/api/menu/:id", requireAdmin, (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const existing = db
-            .prepare("SELECT * FROM menu WHERE id = ?")
-            .get(id);
-
-        if (!existing) {
-            return res.status(404).json({
-                error: "Item not found"
-            });
-        }
-
-        const name = req.body.name ?? existing.name;
-        const price = req.body.price ?? existing.price;
-        const stock = req.body.stock ?? existing.stock;
-
-        const available =
-            req.body.available === undefined
-                ? existing.available
-                : (req.body.available ? 1 : 0);
-
-        db.prepare(`
-            UPDATE menu
-            SET name = ?, price = ?, stock = ?, available = ?
-            WHERE id = ?
-        `).run(
-            name,
-            price,
-            stock,
-            available,
-            id
-        );
-
-        const updated = db
-            .prepare("SELECT * FROM menu WHERE id = ?")
-            .get(id);
-
-        res.json(updated);
-
-    } catch (error) {
-        console.error("MENU UPDATE ERROR:", error);
-
-        res.status(500).json({
-            error: "Could not update item"
-        });
-    }
-});
-
-// Delete menu item
-app.delete("/api/menu/:id", requireAdmin, (req, res) => {
-    try {
-        const result = db
-            .prepare("DELETE FROM menu WHERE id = ?")
-            .run(req.params.id);
-
-        if (result.changes === 0) {
-            return res.status(404).json({
-                error: "Item not found"
-            });
-        }
-
-        res.json({
-            message: "Item deleted successfully"
-        });
-
-    } catch (error) {
-        console.error("MENU DELETE ERROR:", error);
-
-        res.status(500).json({
-            error: "Could not delete item"
-        });
-    }
-});
-
-// ==============================
+// =========================================================
 // ORDER ROUTES
-// ==============================
+// =========================================================
 
-// Create order
+// GET /api/orders -> shob order dekhabe (admin dashboard er jonno)
+app.get("/api/orders", (req, res) => {
+  const orders = readJSON(ORDERS_FILE);
+  res.json(orders);
+});
+
+// POST /api/orders -> notun order place korbe (student side)
 app.post("/api/orders", (req, res) => {
-    try {
-        const {
-            studentName,
-            foodId,
-            quantity,
-            pickupTime
-        } = req.body;
+  const orders = readJSON(ORDERS_FILE);
 
-        if (!studentName || !foodId || !quantity || !pickupTime) {
-            return res.status(400).json({
-                error: "All fields are required"
-            });
-        }
+  const newOrder = {
+    id: Date.now(),
+    studentName: req.body.studentName,
+    items: req.body.items, // array of { name, price, qty }
+    totalPrice: req.body.totalPrice,
+    pickupTime: req.body.pickupTime,
+    status: "Pending", // Pending -> Preparing -> Ready -> Collected
+    createdAt: new Date().toISOString(),
+  };
 
-        if (quantity <= 0) {
-            return res.status(400).json({
-                error: "Quantity must be greater than 0"
-            });
-        }
-
-        const food = db
-            .prepare("SELECT * FROM menu WHERE id = ?")
-            .get(foodId);
-
-        if (!food) {
-            return res.status(404).json({
-                error: "Food not found"
-            });
-        }
-
-        if (!food.available) {
-            return res.status(400).json({
-                error: "This item is currently unavailable"
-            });
-        }
-
-        if (quantity > food.stock) {
-            return res.status(400).json({
-                error: "Not enough stock available"
-            });
-        }
-
-        const totalPrice = food.price * quantity;
-
-        const result = db.prepare(`
-            INSERT INTO orders
-            (studentName, items, totalPrice, pickupTime, status, createdAt)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `).run(
-            studentName,
-            `${food.name} x ${quantity}`,
-            totalPrice,
-            pickupTime,
-            "Pending",
-            new Date().toISOString()
-        );
-
-        db.prepare(`
-            UPDATE menu
-            SET
-                stock = stock - ?,
-                available = CASE
-                    WHEN stock - ? <= 0 THEN 0
-                    ELSE available
-                END
-            WHERE id = ?
-        `).run(
-            quantity,
-            quantity,
-            foodId
-        );
-
-        res.status(201).json({
-            message: "Order placed successfully!",
-            orderId: result.lastInsertRowid,
-            studentName,
-            food: food.name,
-            quantity,
-            totalPrice,
-            pickupTime,
-            status: "Pending"
-        });
-
-    } catch (error) {
-        console.error("ORDER POST ERROR:", error);
-
-        res.status(500).json({
-            error: "Could not place order"
-        });
-    }
+  orders.push(newOrder);
+  writeJSON(ORDERS_FILE, orders);
+  res.status(201).json(newOrder);
 });
 
-// Get all orders
-app.get("/api/orders", requireAdmin, (req, res) => {
-    try {
-        const orders = db
-            .prepare("SELECT * FROM orders ORDER BY id DESC")
-            .all();
+// PUT /api/orders/:id -> order status update korbe (admin: Pending -> Ready etc.)
+app.put("/api/orders/:id", (req, res) => {
+  const orders = readJSON(ORDERS_FILE);
+  const order = orders.find((o) => o.id == req.params.id);
+  if (!order) return res.status(404).json({ error: "Order not found" });
 
-        res.json(orders);
-
-    } catch (error) {
-        console.error("GET ORDERS ERROR:", error);
-
-        res.status(500).json({
-            error: "Could not get orders"
-        });
-    }
+  order.status = req.body.status;
+  writeJSON(ORDERS_FILE, orders);
+  res.json(order);
 });
 
-// Get single order
-app.get("/api/orders/:id", requireAdmin, (req, res) => {
-    try {
-        const order = db
-            .prepare("SELECT * FROM orders WHERE id = ?")
-            .get(req.params.id);
-
-        if (!order) {
-            return res.status(404).json({
-                error: "Order not found"
-            });
-        }
-
-        res.json(order);
-
-    } catch (error) {
-        console.error("GET ORDER ERROR:", error);
-
-        res.status(500).json({
-            error: "Could not get order"
-        });
-    }
+// DELETE /api/orders/:id -> order cancel korbe
+app.delete("/api/orders/:id", (req, res) => {
+  let orders = readJSON(ORDERS_FILE);
+  orders = orders.filter((o) => o.id != req.params.id);
+  writeJSON(ORDERS_FILE, orders);
+  res.json({ message: "Order deleted" });
 });
 
-// Update order status
-app.put("/api/orders/:id/status", requireAdmin, (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-
-        const validStatuses = [
-            "Pending",
-            "Preparing",
-            "Ready",
-            "Completed",
-            "Cancelled"
-        ];
-
-        if (!status || !validStatuses.includes(status)) {
-            return res.status(400).json({
-                error: `Status must be one of: ${validStatuses.join(", ")}`
-            });
-        }
-
-        const result = db
-            .prepare("UPDATE orders SET status = ? WHERE id = ?")
-            .run(status, id);
-
-        if (result.changes === 0) {
-            return res.status(404).json({
-                error: "Order not found"
-            });
-        }
-
-        res.json({
-            message: "Order status updated successfully",
-            orderId: id,
-            status: status
-        });
-
-    } catch (error) {
-        console.error("ORDER STATUS ERROR:", error);
-
-        res.status(500).json({
-            error: error.message
-        });
-    }
-});
-
-// Delete order
-app.delete("/api/orders/:id", requireAdmin, (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const order = db
-            .prepare("SELECT * FROM orders WHERE id = ?")
-            .get(id);
-
-        if (!order) {
-            return res.status(404).json({
-                error: "Order not found"
-            });
-        }
-
-        db.prepare("DELETE FROM orders WHERE id = ?").run(id);
-
-        res.json({
-            message: "Order deleted successfully",
-            orderId: id
-        });
-
-    } catch (error) {
-        console.error("ORDER DELETE ERROR:", error);
-
-        res.status(500).json({
-            error: "Could not delete order"
-        });
-    }
-});
-
-// ==============================
-// START SERVER
-// ==============================
+// =========================================================
 app.listen(PORT, () => {
-    console.log("=================================");
-    console.log("Canteen Preorder Server Started");
-    console.log(`http://localhost:${PORT}`);
-    console.log(`Admin key: ${ADMIN_KEY}`);
-    console.log("=================================");
+  console.log(`Server running at http://localhost:${PORT}`);
 });

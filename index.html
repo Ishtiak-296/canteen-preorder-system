@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +12,12 @@
 
 <body>
 
-    <!-- Header -->
+    <!-- ============================== -->
+    <!-- HEADER -->
+    <!-- ============================== -->
+
     <header class="header">
+
         <div>
             <h1>🍽️ Canteen Preorder</h1>
             <p>Order your food before reaching the counter</p>
@@ -22,16 +27,22 @@
             🛒 Cart
             (<span id="cartCount">0</span>)
         </button>
+
     </header>
 
 
-    <!-- Main -->
+    <!-- ============================== -->
+    <!-- MAIN -->
+    <!-- ============================== -->
+
     <main class="container">
 
-        <!-- Menu Section -->
+        <!-- MENU -->
+
         <section class="menu-section">
 
             <div class="section-top">
+
                 <div>
                     <h2>Today's Menu</h2>
                     <p>Choose your favorite food</p>
@@ -44,10 +55,12 @@
                     placeholder="🔍 Search food..."
                     oninput="searchMenu()"
                 >
+
             </div>
 
 
             <!-- Categories -->
+
             <div class="categories">
 
                 <button
@@ -77,48 +90,77 @@
             </div>
 
 
+            <!-- Menu Status -->
+
             <div id="menuStatus" class="menu-status">
                 Loading menu...
             </div>
 
 
-            <div id="menuContainer" class="menu-grid" hidden>
+            <!-- Menu Container -->
+
+            <div
+                id="menuContainer"
+                class="menu-grid"
+                hidden>
             </div>
 
         </section>
 
 
-        <!-- Cart -->
-        <section id="cartBox" class="cart-box">
+        <!-- ============================== -->
+        <!-- CART -->
+        <!-- ============================== -->
+
+        <section
+            id="cartBox"
+            class="cart-box"
+            style="display: none;">
 
             <div class="cart-header">
+
                 <h2>🛒 Your Cart</h2>
 
-                <button class="close-btn" onclick="closeCart()">
+                <button
+                    class="close-btn"
+                    onclick="closeCart()">
                     ✕
                 </button>
+
             </div>
 
 
             <!-- Empty Cart -->
-            <div id="cartEmpty" class="cart-empty">
-                <div class="empty-icon">🛒</div>
+
+            <div
+                id="cartEmpty"
+                class="cart-empty">
+
+                <div class="empty-icon">
+                    🛒
+                </div>
 
                 <h3>Your cart is empty</h3>
 
                 <p>
                     Add something delicious from the menu.
                 </p>
+
             </div>
 
 
             <!-- Cart Items -->
+
             <div id="cartItems">
             </div>
 
 
             <!-- Customer Information -->
-            <div id="cartFooterFields" class="customer-fields" hidden>
+
+            <div
+                id="cartFooterFields"
+                class="customer-fields"
+                hidden>
 
                 <h3>Customer Information</h3>
 
@@ -145,7 +187,11 @@
 
 
             <!-- Total -->
-            <div id="cartTotalRow" class="cart-total" hidden>
+
+            <div
+                id="cartTotalRow"
+                class="cart-total"
+                hidden>
 
                 <span>Total</span>
 
@@ -157,11 +203,16 @@
 
 
             <!-- Order Message -->
-            <div id="orderMsg" class="order-msg" hidden>
+
+            <div
+                id="orderMsg"
+                class="order-msg"
+                hidden>
             </div>
 
 
             <!-- Place Order -->
+
             <button
                 id="placeOrderBtn"
                 class="place-order-btn"
@@ -175,7 +226,612 @@
     </main>
 
 
-    <script src="app.js"></script>
+    <!-- ============================== -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================== -->
+
+    <script>
+
+        // ==============================
+        // VARIABLES
+        // ==============================
+
+        let menu = [];
+        let cart = [];
+
+
+        // ==============================
+        // LOAD MENU FROM SERVER
+        // ==============================
+
+        async function loadMenu() {
+
+            const status =
+                document.getElementById("menuStatus");
+
+            const container =
+                document.getElementById("menuContainer");
+
+            try {
+
+                const response =
+                    await fetch("/api/menu");
+
+                if (!response.ok) {
+                    throw new Error("Could not load menu");
+                }
+
+                menu = await response.json();
+
+                console.log("MENU:", menu);
+
+                displayMenu(menu);
+
+                status.hidden = true;
+
+                container.hidden = false;
+
+            } catch (error) {
+
+                console.error(error);
+
+                status.hidden = false;
+
+                status.textContent =
+                    "❌ Could not load menu";
+
+            }
+
+        }
+
+
+        // ==============================
+        // DISPLAY MENU
+        // ==============================
+
+        function displayMenu(items) {
+
+            const container =
+                document.getElementById("menuContainer");
+
+            container.innerHTML = "";
+
+
+            if (items.length === 0) {
+
+                container.innerHTML =
+                    "<p>No food available.</p>";
+
+                return;
+            }
+
+
+            items.forEach(function(item) {
+
+                const card =
+                    document.createElement("div");
+
+                card.className = "food-card";
+
+
+                const buttonText =
+                    item.stock > 0 && item.available
+                        ? "Add to Cart"
+                        : "Unavailable";
+
+
+                const disabled =
+                    item.stock <= 0 || !item.available
+                        ? "disabled"
+                        : "";
+
+
+                card.innerHTML = `
+
+                    <h3>${item.name}</h3>
+
+                    <p>
+                        Price:
+                        <strong>৳${item.price}</strong>
+                    </p>
+
+                    <p>
+                        Stock:
+                        <strong>${item.stock}</strong>
+                    </p>
+
+                    <button
+                        onclick="addToCart('${item.id}')"
+                        ${disabled}>
+                        ${buttonText}
+                    </button>
+
+                `;
+
+
+                container.appendChild(card);
+
+            });
+
+        }
+
+
+        // ==============================
+        // ADD TO CART
+        // ==============================
+
+        function addToCart(foodId) {
+
+            const food =
+                menu.find(function(item) {
+                    return item.id === foodId;
+                });
+
+
+            if (!food) {
+                return;
+            }
+
+
+            if (food.stock <= 0 || !food.available) {
+
+                alert("This food is not available.");
+
+                return;
+            }
+
+
+            const existing =
+                cart.find(function(item) {
+                    return item.id === foodId;
+                });
+
+
+            if (existing) {
+
+                if (existing.quantity >= food.stock) {
+
+                    alert("Not enough stock.");
+
+                    return;
+                }
+
+                existing.quantity++;
+
+            } else {
+
+                cart.push({
+
+                    id: food.id,
+
+                    name: food.name,
+
+                    price: food.price,
+
+                    quantity: 1
+
+                });
+
+            }
+
+
+            updateCart();
+
+            showCart();
+
+        }
+
+
+        // ==============================
+        // UPDATE CART
+        // ==============================
+
+        function updateCart() {
+
+            let count = 0;
+
+            cart.forEach(function(item) {
+
+                count += item.quantity;
+
+            });
+
+
+            document.getElementById("cartCount")
+                .textContent = count;
+
+
+            displayCart();
+
+        }
+
+
+        // ==============================
+        // DISPLAY CART
+        // ==============================
+
+        function displayCart() {
+
+            const cartItems =
+                document.getElementById("cartItems");
+
+            const cartEmpty =
+                document.getElementById("cartEmpty");
+
+            const footer =
+                document.getElementById("cartFooterFields");
+
+            const totalRow =
+                document.getElementById("cartTotalRow");
+
+            const placeButton =
+                document.getElementById("placeOrderBtn");
+
+            const totalElement =
+                document.getElementById("totalPrice");
+
+
+            cartItems.innerHTML = "";
+
+
+            if (cart.length === 0) {
+
+                cartEmpty.hidden = false;
+
+                footer.hidden = true;
+
+                totalRow.hidden = true;
+
+                placeButton.hidden = true;
+
+                totalElement.textContent = "0";
+
+                return;
+            }
+
+
+            cartEmpty.hidden = true;
+
+            footer.hidden = false;
+
+            totalRow.hidden = false;
+
+            placeButton.hidden = false;
+
+
+            let total = 0;
+
+
+            cart.forEach(function(item, index) {
+
+                const itemTotal =
+                    item.price * item.quantity;
+
+                total += itemTotal;
+
+
+                const div =
+                    document.createElement("div");
+
+                div.className = "cart-item";
+
+
+                div.innerHTML = `
+
+                    <div>
+
+                        <strong>
+                            ${item.name}
+                        </strong>
+
+                        <p>
+                            ৳${item.price}
+                            ×
+                            ${item.quantity}
+                        </p>
+
+                    </div>
+
+                    <div>
+
+                        <button
+                            onclick="decreaseQuantity(${index})">
+                            −
+                        </button>
+
+                        <span>
+                            ${item.quantity}
+                        </span>
+
+                        <button
+                            onclick="increaseQuantity(${index})">
+                            +
+                        </button>
+
+                    </div>
+
+                `;
+
+
+                cartItems.appendChild(div);
+
+            });
+
+
+            totalElement.textContent = total;
+
+        }
+
+
+        // ==============================
+        // INCREASE
+        // ==============================
+
+        function increaseQuantity(index) {
+
+            const cartItem = cart[index];
+
+
+            const food =
+                menu.find(function(item) {
+                    return item.id === cartItem.id;
+                });
+
+
+            if (!food) {
+                return;
+            }
+
+
+            if (cartItem.quantity >= food.stock) {
+
+                alert("Not enough stock.");
+
+                return;
+            }
+
+
+            cartItem.quantity++;
+
+            updateCart();
+
+        }
+
+
+        // ==============================
+        // DECREASE
+        // ==============================
+
+        function decreaseQuantity(index) {
+
+            if (cart[index].quantity > 1) {
+
+                cart[index].quantity--;
+
+            } else {
+
+                cart.splice(index, 1);
+
+            }
+
+
+            updateCart();
+
+        }
+
+
+        // ==============================
+        // SHOW CART
+        // ==============================
+
+        function showCart() {
+
+            document.getElementById("cartBox")
+                .style.display = "block";
+
+        }
+
+
+        // ==============================
+        // CLOSE CART
+        // ==============================
+
+        function closeCart() {
+
+            document.getElementById("cartBox")
+                .style.display = "none";
+
+        }
+
+
+        // ==============================
+        // SEARCH MENU
+        // ==============================
+
+        function searchMenu() {
+
+            const input =
+                document.getElementById("searchInput");
+
+            const text =
+                input.value.toLowerCase();
+
+
+            const filtered =
+                menu.filter(function(item) {
+
+                    return item.name
+                        .toLowerCase()
+                        .includes(text);
+
+                });
+
+
+            displayMenu(filtered);
+
+        }
+
+
+        // ==============================
+        // CATEGORY
+        // ==============================
+
+        function filterCategory(category, button) {
+
+            document
+                .querySelectorAll(".category-btn")
+                .forEach(function(btn) {
+
+                    btn.classList.remove("active");
+
+                });
+
+
+            button.classList.add("active");
+
+
+            // Database currently has no category field.
+            // Therefore all foods are shown.
+
+            displayMenu(menu);
+
+        }
+
+
+        // ==============================
+        // PLACE ORDER
+        // ==============================
+
+        async function placeOrder() {
+
+            if (cart.length === 0) {
+
+                alert("Your cart is empty.");
+
+                return;
+            }
+
+
+            const studentName =
+                document
+                    .getElementById("customerName")
+                    .value
+                    .trim();
+
+
+            if (!studentName) {
+
+                alert("Please enter your name.");
+
+                return;
+            }
+
+
+            const table =
+                document
+                    .getElementById("customerTable")
+                    .value
+                    .trim();
+
+
+            if (!table) {
+
+                alert("Please enter table or roll number.");
+
+                return;
+            }
+
+
+            const orderMsg =
+                document.getElementById("orderMsg");
+
+
+            try {
+
+                // Place each cart item as an order
+
+                for (const item of cart) {
+
+                    const response =
+                        await fetch("/api/orders", {
+
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+
+                                studentName:
+                                    studentName,
+
+                                foodId:
+                                    item.id,
+
+                                quantity:
+                                    item.quantity,
+
+                                pickupTime:
+                                    table
+
+                            })
+
+                        });
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.error ||
+                            "Order failed"
+                        );
+
+                    }
+
+                }
+
+
+                orderMsg.hidden = false;
+
+                orderMsg.textContent =
+                    "✅ Order placed successfully!";
+
+
+                cart = [];
+
+                updateCart();
+
+                await loadMenu();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                orderMsg.hidden = false;
+
+                orderMsg.textContent =
+                    "❌ " + error.message;
+
+            }
+
+        }
+
+
+        // ==============================
+        // START APPLICATION
+        // ==============================
+
+        loadMenu();
+
+    </script>
 
 </body>
+
 </html>

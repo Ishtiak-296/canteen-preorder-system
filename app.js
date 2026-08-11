@@ -2,166 +2,181 @@ let menu = [];
 let cart = [];
 
 
-// =========================
+// ==============================
 // LOAD MENU
-// =========================
+// ==============================
 
 async function loadMenu() {
+
     const status = document.getElementById("menuStatus");
     const container = document.getElementById("menuContainer");
 
     try {
-        const response = await fetch("http://localhost:4000/api/menu");
+
+        const response = await fetch("/api/menu");
 
         if (!response.ok) {
-            throw new Error("Failed to load menu");
+            throw new Error("Could not load menu");
         }
 
         menu = await response.json();
 
-        status.hidden = true;
-        container.hidden = false;
+        console.log("MENU:", menu);
 
-        displayMenu();
+        displayMenu(menu);
+
+        status.hidden = true;
 
     } catch (error) {
+
         console.error(error);
 
         status.hidden = false;
+        status.textContent = "❌ Could not load menu";
 
-        status.innerHTML = `
-            ❌ Failed to load menu.
-            <br>
-            Make sure the server is running.
-        `;
     }
 }
 
 
-// =========================
+// ==============================
 // DISPLAY MENU
-// =========================
+// ==============================
 
-function displayMenu() {
+function displayMenu(items) {
 
-    const container =
-        document.getElementById("menuContainer");
+    const container = document.getElementById("menuContainer");
 
-    if (menu.length === 0) {
-        container.innerHTML = `
-            <div class="menu-status">
-                No food available.
-            </div>
-        `;
+    container.innerHTML = "";
+
+    if (items.length === 0) {
+
+        container.innerHTML = "<p>No food available.</p>";
+
         return;
     }
 
-    container.innerHTML = menu.map(item => {
+    items.forEach(function(item) {
 
-        const outOfStock =
-            item.stock <= 0 || item.available !== 1;
+        const card = document.createElement("div");
 
-        return `
-            <div class="menu-card">
+        card.className = "menu-card";
 
-                <div class="food-content">
+        const unavailable =
+            item.stock <= 0 || item.available === 0;
 
-                    <h3>${item.name}</h3>
+        card.innerHTML = `
 
-                    <p class="food-description">
-                        Fresh and delicious ${item.name}
-                    </p>
+            <div class="food-content">
 
-                    <p>
-                        Stock: ${item.stock}
-                    </p>
+                <h3>${item.name}</h3>
 
-                    <div class="food-bottom">
+                <p class="food-description">
+                    Fresh food available from canteen.
+                </p>
 
-                        <span class="food-price">
-                            ৳${item.price}
-                        </span>
+                <p>
+                    Stock:
+                    <strong>${item.stock}</strong>
+                </p>
 
-                        ${
-                            outOfStock
-                            ? `
-                                <button
-                                    class="add-btn"
-                                    disabled>
-                                    Out of Stock
-                                </button>
-                            `
-                            : `
-                                <button
-                                    class="add-btn"
-                                    onclick="addToCart('${item.id}')">
-                                    + Add
-                                </button>
-                            `
-                        }
+                <div class="food-bottom">
 
-                    </div>
+                    <span class="food-price">
+                        ৳${item.price}
+                    </span>
+
+                    <button
+                        class="add-btn"
+                        onclick="addToCart('${item.id}')"
+                        ${unavailable ? "disabled" : ""}
+                    >
+                        ${unavailable ? "Unavailable" : "Add to Cart"}
+                    </button>
 
                 </div>
 
             </div>
         `;
 
-    }).join("");
+        container.appendChild(card);
+
+    });
 }
 
 
-// =========================
+// ==============================
 // ADD TO CART
-// =========================
+// ==============================
 
-function addToCart(id) {
+function addToCart(foodId) {
 
-    const item = menu.find(
-        food => String(food.id) === String(id)
-    );
+    const food = menu.find(function(item) {
+        return item.id === foodId;
+    });
 
-    if (!item) {
-        alert("Food item not found.");
+    if (!food) {
+        alert("Food not found.");
         return;
     }
 
-    const existing = cart.find(
-        food => String(food.id) === String(id)
-    );
+    if (food.stock <= 0 || food.available === 0) {
+        alert("This food is not available.");
+        return;
+    }
+
+    const existing = cart.find(function(item) {
+        return item.id === foodId;
+    });
 
     if (existing) {
 
-        if (existing.quantity < item.stock) {
-            existing.quantity++;
-        } else {
-            alert("Maximum available stock reached.");
+        if (existing.quantity >= food.stock) {
+            alert("Not enough stock.");
+            return;
         }
+
+        existing.quantity++;
 
     } else {
 
         cart.push({
-            id: item.id,
-            name: item.name,
-            price: Number(item.price),
-            stock: Number(item.stock),
+            id: food.id,
+            name: food.name,
+            price: food.price,
             quantity: 1
         });
+
     }
 
     updateCart();
+
     showCart();
 }
 
 
-// =========================
+// ==============================
 // UPDATE CART
-// =========================
+// ==============================
 
 function updateCart() {
 
-    const cartCount =
-        document.getElementById("cartCount");
+    let count = 0;
+
+    cart.forEach(function(item) {
+        count += item.quantity;
+    });
+
+    document.getElementById("cartCount").textContent = count;
+
+    displayCart();
+}
+
+
+// ==============================
+// DISPLAY CART
+// ==============================
+
+function displayCart() {
 
     const cartItems =
         document.getElementById("cartItems");
@@ -169,269 +184,317 @@ function updateCart() {
     const cartEmpty =
         document.getElementById("cartEmpty");
 
-    const footerFields =
+    const footer =
         document.getElementById("cartFooterFields");
 
     const totalRow =
         document.getElementById("cartTotalRow");
 
-    const placeOrderBtn =
+    const placeButton =
         document.getElementById("placeOrderBtn");
 
+    const totalElement =
+        document.getElementById("totalPrice");
 
-    const totalQuantity = cart.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-    );
-
-    cartCount.textContent = totalQuantity;
-
+    cartItems.innerHTML = "";
 
     if (cart.length === 0) {
 
         cartEmpty.hidden = false;
-        footerFields.hidden = true;
+        footer.hidden = true;
         totalRow.hidden = true;
-        placeOrderBtn.hidden = true;
+        placeButton.hidden = true;
 
-        cartItems.innerHTML = "";
+        totalElement.textContent = "0";
 
         return;
     }
 
-
     cartEmpty.hidden = true;
-    footerFields.hidden = false;
+    footer.hidden = false;
     totalRow.hidden = false;
-    placeOrderBtn.hidden = false;
+    placeButton.hidden = false;
 
+    let total = 0;
 
-    cartItems.innerHTML = cart.map((item, index) => {
+    cart.forEach(function(item, index) {
 
-        return `
-            <div class="cart-item">
+        const itemTotal =
+            item.price * item.quantity;
 
-                <div class="cart-item-info">
+        total += itemTotal;
 
-                    <h4>${item.name}</h4>
+        const div =
+            document.createElement("div");
 
-                    <p>
-                        ৳${item.price} × ${item.quantity}
-                    </p>
+        div.className = "cart-item";
 
-                </div>
+        div.innerHTML = `
 
+            <div>
+                <strong>${item.name}</strong>
 
-                <div class="quantity-controls">
+                <p>
+                    ৳${item.price} × ${item.quantity}
+                </p>
+            </div>
 
-                    <button
-                        class="quantity-btn"
-                        onclick="changeQuantity(${index}, -1)">
-                        −
-                    </button>
+            <div class="quantity-controls">
 
-                    <span class="quantity">
-                        ${item.quantity}
-                    </span>
+                <button
+                    class="quantity-btn"
+                    onclick="decreaseQuantity(${index})">
+                    −
+                </button>
 
-                    <button
-                        class="quantity-btn"
-                        onclick="changeQuantity(${index}, 1)">
-                        +
-                    </button>
+                <span class="quantity">
+                    ${item.quantity}
+                </span>
 
-                </div>
+                <button
+                    class="quantity-btn"
+                    onclick="increaseQuantity(${index})">
+                    +
+                </button>
 
             </div>
         `;
 
-    }).join("");
+        cartItems.appendChild(div);
 
-    calculateTotal();
+    });
+
+    totalElement.textContent = total;
 }
 
 
-// =========================
-// CHANGE QUANTITY
-// =========================
+// ==============================
+// INCREASE QUANTITY
+// ==============================
 
-function changeQuantity(index, change) {
+function increaseQuantity(index) {
 
-    const item = cart[index];
+    const cartItem = cart[index];
 
-    if (change > 0 && item.quantity >= item.stock) {
-        alert("Maximum available stock reached.");
+    const food = menu.find(function(item) {
+        return item.id === cartItem.id;
+    });
+
+    if (!food) {
         return;
     }
 
-    item.quantity += change;
+    if (cartItem.quantity >= food.stock) {
 
-    if (item.quantity <= 0) {
+        alert("Not enough stock.");
+
+        return;
+    }
+
+    cartItem.quantity++;
+
+    updateCart();
+}
+
+
+// ==============================
+// DECREASE QUANTITY
+// ==============================
+
+function decreaseQuantity(index) {
+
+    if (cart[index].quantity > 1) {
+
+        cart[index].quantity--;
+
+    } else {
+
         cart.splice(index, 1);
+
     }
 
     updateCart();
 }
 
 
-// =========================
-// CALCULATE TOTAL
-// =========================
-
-function calculateTotal() {
-
-    const total = cart.reduce(
-        (sum, item) =>
-            sum + item.price * item.quantity,
-        0
-    );
-
-    document.getElementById("totalPrice").textContent = total;
-}
-
-
-// =========================
+// ==============================
 // SHOW CART
-// =========================
+// ==============================
 
 function showCart() {
 
-    const cartBox =
-        document.getElementById("cartBox");
+    document.getElementById("cartBox").style.display = "block";
 
-    cartBox.classList.add("show");
-
-    cartBox.scrollIntoView({
-        behavior: "smooth"
-    });
 }
 
 
-// =========================
+// ==============================
 // CLOSE CART
-// =========================
+// ==============================
 
 function closeCart() {
 
-    document
-        .getElementById("cartBox")
-        .classList.remove("show");
+    document.getElementById("cartBox").style.display = "none";
+
 }
 
 
-// =========================
+// ==============================
+// SEARCH
+// ==============================
+
+function searchMenu() {
+
+    const text =
+        document
+            .getElementById("searchInput")
+            .value
+            .toLowerCase();
+
+    const filtered =
+        menu.filter(function(item) {
+
+            return item.name
+                .toLowerCase()
+                .includes(text);
+
+        });
+
+    displayMenu(filtered);
+}
+
+
+// ==============================
+// CATEGORY
+// ==============================
+
+function filterCategory(category, button) {
+
+    document
+        .querySelectorAll(".category-btn")
+        .forEach(function(btn) {
+
+            btn.classList.remove("active");
+
+        });
+
+    button.classList.add("active");
+
+    // Database-এ category নেই,
+    // তাই সব food দেখানো হচ্ছে।
+
+    displayMenu(menu);
+}
+
+
+// ==============================
 // PLACE ORDER
-// =========================
+// ==============================
 
 async function placeOrder() {
 
     if (cart.length === 0) {
+
         alert("Your cart is empty.");
+
         return;
     }
 
-    const name =
-        document.getElementById("customerName")
-        .value.trim();
+    const studentName =
+        document
+            .getElementById("customerName")
+            .value
+            .trim();
+
+    if (!studentName) {
+
+        alert("Please enter your name.");
+
+        return;
+    }
 
     const table =
-        document.getElementById("customerTable")
-        .value.trim();
-
-
-    if (!name) {
-        alert("Please enter your name.");
-        return;
-    }
+        document
+            .getElementById("customerTable")
+            .value
+            .trim();
 
     if (!table) {
-        alert("Please enter your table or roll number.");
+
+        alert("Please enter table or roll number.");
+
         return;
     }
 
-
-    const orderData = {
-        customerName: name,
-        customerTable: table,
-
-        items: cart.map(item => ({
-            menu_id: item.id,
-            quantity: item.quantity,
-            price: item.price
-        })),
-
-        total: cart.reduce(
-            (sum, item) =>
-                sum + item.price * item.quantity,
-            0
-        )
-    };
-
+    const orderMsg =
+        document.getElementById("orderMsg");
 
     try {
 
-        const response = await fetch(
-            "http://localhost:4000/api/orders",
-            {
-                method: "POST",
+        for (const item of cart) {
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+            const response =
+                await fetch("/api/orders", {
 
-                body: JSON.stringify(orderData)
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        studentName: studentName,
+
+                        foodId: item.id,
+
+                        quantity: item.quantity,
+
+                        pickupTime: table
+
+                    })
+
+                });
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error || "Order failed"
+                );
+
             }
-        );
 
-
-        const result = await response.json();
-
-
-        if (!response.ok) {
-            throw new Error(
-                result.message || "Order failed"
-            );
         }
 
+        orderMsg.hidden = false;
 
-        document.getElementById("orderMsg").hidden = false;
-
-        document.getElementById("orderMsg").innerHTML = `
-            ✅ Order placed successfully!
-            <br>
-            Order ID:
-            <strong>#${result.orderId || result.id || ""}</strong>
-        `;
-
+        orderMsg.textContent =
+            "✅ Order placed successfully!";
 
         cart = [];
 
         updateCart();
 
-        document.getElementById("customerName").value = "";
-        document.getElementById("customerTable").value = "";
-
+        await loadMenu();
 
     } catch (error) {
 
         console.error(error);
 
-        alert(
-            "❌ Failed to place order.\n" +
-            error.message
-        );
+        orderMsg.hidden = false;
+
+        orderMsg.textContent =
+            "❌ " + error.message;
+
     }
 }
 
 
-// =========================
+// ==============================
 // START
-// =========================
+// ==============================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-        loadMenu();
-        updateCart();
-    }
-);
+loadMenu();

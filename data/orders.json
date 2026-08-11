@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1786435679446,
+    "studentName": "jodu",
+    "items": [
+      {
+        "name": "Chicken Biryani",
+        "price": 120,
+        "qty": 1
+      },
+      {
+        "name": "Singara (2 pcs)",
+        "price": 20,
+        "qty": 1
+      },
+      {
+        "name": "Cold Coffee",
+        "price": 50,
+        "qty": 1
+      }
+    ],
+    "totalPrice": 190,
+    "pickupTime": "22:08",
+    "status": "Pending",
+    "createdAt": "2026-08-11T08:07:59.446Z"
+  }
+]
