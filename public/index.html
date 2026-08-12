@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>Canteen Preorder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🍛 Canteen Preorder System</h1>
+    <a href="admin.html">Admin Panel</a>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Today's Menu</h2>
+      <div class="menu-grid" id="menuGrid">
+        <!-- menu items JS diye eikhane load hobe -->
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Your Order</h2>
+      <label>Your Name</label>
+      <input type="text" id="studentName" placeholder="e.g. Rahim" />
+
+      <label>Pickup Time</label>
+      <input type="time" id="pickupTime" />
+
+      <div id="cartItems" style="margin-top:14px;"></div>
+
+      <div class="cart-summary">
+        <strong>Total: ৳<span id="totalPrice">0</span></strong>
+        <button class="btn-primary" onclick="placeOrder()">Place Preorder</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
