@@ -60,6 +60,7 @@ app.put("/api/menu/:id", (req, res) => {
 
 app.get("/api/orders", (req, res) => {
   let allOrders = readJson(ORDERS_FILE);
+  if (req.query.id) allOrders = allOrders.filter(order => String(order.id) === String(req.query.id));
   if (req.query.phone) allOrders = allOrders.filter(order => order.phone === req.query.phone);
   res.json(allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
 });
