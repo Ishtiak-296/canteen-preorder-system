@@ -58,5 +58,145 @@
     "description": "Large singara with special potato filling",
     "emoji": "🥟",
     "available": true
+  },
+  {
+    "id": 7,
+    "name": "Mutton Tehari",
+    "price": 150,
+    "stock": 18,
+    "category": "meal",
+    "description": "Spicy mutton with aromatic rice",
+    "emoji": "🍛",
+    "available": true
+  },
+  {
+    "id": 8,
+    "name": "Fish Curry with Rice",
+    "price": 110,
+    "stock": 22,
+    "category": "meal",
+    "description": "Fresh fish cooked in traditional curry",
+    "emoji": "🍛",
+    "available": true
+  },
+  {
+    "id": 9,
+    "name": "Prawn Biryani",
+    "price": 130,
+    "stock": 16,
+    "category": "meal",
+    "description": "Delicious prawn biryani with basmati rice",
+    "emoji": "🍛",
+    "available": true
+  },
+  {
+    "id": 10,
+    "name": "Beef Kacchi",
+    "price": 140,
+    "stock": 20,
+    "category": "meal",
+    "description": "Tender beef layered with fragrant rice",
+    "emoji": "🍛",
+    "available": true
+  },
+  {
+    "id": 11,
+    "name": "Samosa (3 pcs)",
+    "price": 25,
+    "stock": 40,
+    "category": "snack",
+    "description": "Crispy potato and peas samosa",
+    "emoji": "🥟",
+    "available": true
+  },
+  {
+    "id": 12,
+    "name": "Spring Roll (2 pcs)",
+    "price": 30,
+    "stock": 32,
+    "category": "snack",
+    "description": "Crispy vegetable spring rolls",
+    "emoji": "🥟",
+    "available": true
+  },
+  {
+    "id": 13,
+    "name": "Chicken Shawarma",
+    "price": 80,
+    "stock": 24,
+    "category": "snack",
+    "description": "Marinated chicken wrapped in pita bread",
+    "emoji": "🥟",
+    "available": true
+  },
+  {
+    "id": 14,
+    "name": "Falafel Wrap",
+    "price": 45,
+    "stock": 20,
+    "category": "snack",
+    "description": "Spiced chickpea fritters in wrap",
+    "emoji": "🥟",
+    "available": true
+  },
+  {
+    "id": 15,
+    "name": "Mozzarella Sticks",
+    "price": 50,
+    "stock": 18,
+    "category": "snack",
+    "description": "Golden fried cheese sticks",
+    "emoji": "🥟",
+    "available": true
+  },
+  {
+    "id": 16,
+    "name": "Iced Tea",
+    "price": 30,
+    "stock": 25,
+    "category": "drink",
+    "description": "Refreshing iced tea with lemon",
+    "emoji": "🥤",
+    "available": true
+  },
+  {
+    "id": 17,
+    "name": "Mango Lassi",
+    "price": 45,
+    "stock": 20,
+    "category": "drink",
+    "description": "Creamy mango yogurt drink",
+    "emoji": "🥤",
+    "available": true
+  },
+  {
+    "id": 18,
+    "name": "Fresh Lime Juice",
+    "price": 35,
+    "stock": 30,
+    "category": "drink",
+    "description": "Freshly squeezed lime juice with mint",
+    "emoji": "🥤",
+    "available": true
+  },
+  {
+    "id": 19,
+    "name": "Strawberry Shake",
+    "price": 55,
+    "stock": 15,
+    "category": "drink",
+    "description": "Thick strawberry milkshake",
+    "emoji": "🥤",
+    "available": true
+  },
+  {
+    "id": 20,
+    "name": "Chicken Fry Rice",
+    "price": 90,
+    "stock": 19,
+    "category": "meal",
+    "description": "Fried rice with chicken and vegetables",
+    "emoji": "🍛",
+    "available": true
   }
 ]

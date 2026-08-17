@@ -1,6 +1,6 @@
 {
   "name": "canteen-preorder",
-  "version": "1.0.0",a
+  "version": "1.0.0",
   "description": "Canteen Food Preorder System - Beginner Fullstack Project",
   "main": "server.js",
   "scripts": {
