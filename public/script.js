@@ -1,152 +1,27 @@
-// ============================================
-// FRONTEND SCRIPT - Backend er sathe kotha bole (fetch API diye)
-// ============================================
+let menu = [], cart = [], activeCategory = "all";
+const money = value => `৳${Number(value).toLocaleString("en-US")}`;
+const esc = value => String(value).replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c]);
+const icons = { meal:"🍛", snack:"🥟", drink:"🥤" };
+async function api(url, options) { const response = await fetch(url, options); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Request failed."); return data; }
+function toast(message) { const node = document.getElementById("toast"); if (!node) return alert(message); node.textContent = message; node.classList.add("show"); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => node.classList.remove("show"), 2600); }
 
-let cart = {}; // { itemId: { name, price, qty } }
+async function loadMenu() { if (!document.getElementById("menuGrid")) return; try { menu = await api("/api/menu"); renderMenu(); } catch (error) { document.getElementById("menuGrid").innerHTML = `<p>${esc(error.message)}</p>`; } }
+function renderMenu() { const search = document.getElementById("search").value.toLowerCase(); const categories = {all:"সবগুলো",meal:"🍛 Meals",snack:"🥟 Snacks",drink:"🥤 Drinks"}; document.getElementById("categories").innerHTML = Object.entries(categories).map(([id,label]) => `<button class="chip ${id===activeCategory?"active":""}" onclick="setCategory('${id}')">${label}</button>`).join(""); const list = menu.filter(item => (activeCategory === "all" || item.category === activeCategory) && item.name.toLowerCase().includes(search)); document.getElementById("menuGrid").innerHTML = list.map(item => { const usable = item.available && item.stock > 0; return `<article class="food-card ${item.category}"><div class="food-image">${item.emoji || icons[item.category] || "🍽️"}</div><div class="food-body"><h3>${esc(item.name)}</h3><p>${esc(item.description)}</p><div class="food-footer"><div><b>${money(item.price)}</b><small class="${item.stock < 6 ? "low" : ""}">${usable ? `${item.stock} in stock` : "Unavailable"}</small></div><button class="add" ${usable ? "" : "disabled"} onclick="addToCart(${item.id})">${usable ? "Add +" : "Sold out"}</button></div></div></article>`; }).join("") || "<p>কোনো খাবার পাওয়া যায়নি।</p>"; }
+function setCategory(category) { activeCategory = category; renderMenu(); }
+function addToCart(id) { const food = menu.find(item => item.id === id); const line = cart.find(item => item.id === id); if (!food || !food.available || food.stock < 1) return toast("এই খাবারটি পাওয়া যাচ্ছে না।"); if (line && line.qty >= food.stock) return toast("স্টকে এর বেশি নেই।"); if (line) line.qty++; else cart.push({id,qty:1}); renderCart(); toast("Cart-এ যোগ হয়েছে।"); }
+function changeQty(id, delta) { const line = cart.find(item => item.id === id), food = menu.find(item => item.id === id); if (!line || !food) return; if (delta > 0 && line.qty >= food.stock) return toast("স্টকে এর বেশি নেই।"); line.qty += delta; cart = cart.filter(item => item.qty > 0); renderCart(); }
+function toggleCart() { document.getElementById("cartDrawer").classList.toggle("open"); document.getElementById("overlay").classList.toggle("show"); }
+function renderCart() { if (!document.getElementById("cartItems")) return; const lines = cart.map(line => ({...line,food:menu.find(item=>item.id===line.id)})).filter(line=>line.food); const total = lines.reduce((sum,line)=>sum+line.food.price*line.qty,0); document.getElementById("cartItems").innerHTML = lines.map(line => `<div class="cart-item"><div><b>${esc(line.food.name)}</b><small>${money(line.food.price)} each</small></div><div class="qty"><button onclick="changeQty(${line.id},-1)">−</button><span>${line.qty}</span><button onclick="changeQty(${line.id},1)">+</button></div></div>`).join(""); document.getElementById("cartCount").textContent=lines.reduce((sum,line)=>sum+line.qty,0); document.getElementById("totalPrice").textContent=money(total); document.getElementById("emptyCart").hidden=Boolean(lines.length); document.getElementById("checkout").hidden=!lines.length; }
+async function placeOrder() { const studentName=document.getElementById("studentName").value.trim(),studentId=document.getElementById("studentId").value.trim(),phone=document.getElementById("phone").value.trim(),pickupTime=document.getElementById("pickupTime").value; if (!studentName||!studentId||!/^01\d{9}$/.test(phone)||!pickupTime) return toast("নাম, ID, ১১ ডিজিটের ফোন ও pickup time দিন।"); try { const order=await api("/api/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentName,studentId,phone,pickupTime,paymentMethod:document.getElementById("payment").value,items:cart})}); cart=[]; renderCart(); await loadMenu(); toggleCart(); ["studentName","studentId","phone","pickupTime"].forEach(id=>document.getElementById(id).value=""); showReceipt(order); } catch(error) { toast(error.message); } }
+function showReceipt(order) { toast(`Order #${order.id} confirmed. Total: ${money(order.totalPrice)}`); }
 
-// ---------- STUDENT PAGE: Menu load kora ----------
-async function loadMenu() {
-  const menuGrid = document.getElementById("menuGrid");
-  if (!menuGrid) return; // admin page e ei function lagbe na
-
-  const res = await fetch("/api/menu");
-  const menu = await res.json();
-
-  menuGrid.innerHTML = "";
-  menu
-    .filter((item) => item.available)
-    .forEach((item) => {
-      const div = document.createElement("div");
-      div.className = "menu-item";
-      div.innerHTML = `
-        <h3>${item.name}</h3>
-        <span class="price">৳${item.price}</span>
-        <div class="qty-controls">
-          <button onclick="changeQty(${item.id}, '${item.name}', ${item.price}, -1)">-</button>
-          <span id="qty-${item.id}">0</span>
-          <button onclick="changeQty(${item.id}, '${item.name}', ${item.price}, 1)">+</button>
-        </div>
-      `;
-      menuGrid.appendChild(div);
-    });
-}
-
-function changeQty(id, name, price, delta) {
-  if (!cart[id]) cart[id] = { name, price, qty: 0 };
-  cart[id].qty = Math.max(0, cart[id].qty + delta);
-
-  document.getElementById(`qty-${id}`).innerText = cart[id].qty;
-  updateCartSummary();
-}
-
-function updateCartSummary() {
-  const cartItemsDiv = document.getElementById("cartItems");
-  let total = 0;
-  let html = "";
-
-  Object.values(cart).forEach((item) => {
-    if (item.qty > 0) {
-      total += item.price * item.qty;
-      html += `<div class="order-row"><span>${item.name} x${item.qty}</span><span>৳${item.price * item.qty}</span></div>`;
-    }
-  });
-
-  cartItemsDiv.innerHTML = html || "<p>Kono item select kora hoyni.</p>";
-  document.getElementById("totalPrice").innerText = total;
-}
-
-async function placeOrder() {
-  const studentName = document.getElementById("studentName").value.trim();
-  const pickupTime = document.getElementById("pickupTime").value;
-  const items = Object.values(cart).filter((item) => item.qty > 0);
-  const totalPrice = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-
-  if (!studentName) return alert("Tomar naam likho!");
-  if (items.length === 0) return alert("Kono item select koro age!");
-  if (!pickupTime) return alert("Pickup time select koro!");
-
-  const res = await fetch("/api/orders", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ studentName, items, totalPrice, pickupTime }),
-  });
-
-  if (res.ok) {
-    alert("Order place hoyeche! Pickup time e canteen e giye collect koro.");
-    cart = {};
-    loadMenu();
-    document.getElementById("cartItems").innerHTML = "";
-    document.getElementById("totalPrice").innerText = "0";
-    document.getElementById("studentName").value = "";
-  }
-}
-
-// ---------- ADMIN PAGE: Menu item add kora ----------
-async function addMenuItem() {
-  const name = document.getElementById("newItemName").value.trim();
-  const price = Number(document.getElementById("newItemPrice").value);
-
-  if (!name || !price) return alert("Name ar price thik moto dao!");
-
-  await fetch("/api/menu", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, price }),
-  });
-
-  document.getElementById("newItemName").value = "";
-  document.getElementById("newItemPrice").value = "";
-  alert("Menu item add hoyeche!");
-}
-
-// ---------- ADMIN PAGE: Orders dekhano ----------
-async function loadOrders() {
-  const ordersList = document.getElementById("ordersList");
-  if (!ordersList) return; // student page e ei function lagbe na
-
-  const res = await fetch("/api/orders");
-  const orders = await res.json();
-
-  if (orders.length === 0) {
-    ordersList.innerHTML = "<p>Ekhono kono order ashe ni.</p>";
-    return;
-  }
-
-  ordersList.innerHTML = orders
-    .reverse()
-    .map(
-      (order) => `
-      <div class="order-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
-        <div style="display:flex; justify-content:space-between; width:100%;">
-          <strong>${order.studentName}</strong>
-          <span class="status-badge status-${order.status}">${order.status}</span>
-        </div>
-        <div>${order.items.map((i) => `${i.name} x${i.qty}`).join(", ")}</div>
-        <div>Total: ৳${order.totalPrice} | Pickup: ${order.pickupTime}</div>
-        <select class="status-select" onchange="updateStatus(${order.id}, this.value)">
-          <option ${order.status === "Pending" ? "selected" : ""}>Pending</option>
-          <option ${order.status === "Preparing" ? "selected" : ""}>Preparing</option>
-          <option ${order.status === "Ready" ? "selected" : ""}>Ready</option>
-          <option ${order.status === "Collected" ? "selected" : ""}>Collected</option>
-        </select>
-      </div>
-    `
-    )
-    .join("");
-}
-
-async function updateStatus(orderId, status) {
-  await fetch(`/api/orders/${orderId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
-  });
-  loadOrders();
-}
-
-// ---------- Page load hole shuru hobe ----------
-loadMenu();
-loadOrders();
-if (document.getElementById("ordersList")) {
-  setInterval(loadOrders, 5000); // admin page e proti 5 sec e auto refresh
-}
+async function trackOrders() { const phone=document.getElementById("trackPhone").value.trim(); if(!/^01\d{9}$/.test(phone)) return toast("সঠিক ফোন নম্বর দিন।"); try { const all=await api(`/api/orders?phone=${encodeURIComponent(phone)}`); document.getElementById("trackingResults").innerHTML=all.length?all.map(orderCard).join(""):"<p>কোনো order পাওয়া যায়নি।</p>";}catch(error){toast(error.message);} }
+function orderCard(order, admin=false) { return `<article class="order-card"><div class="order-top"><div><b>${esc(order.studentName)}</b> <small>#${order.id}</small><br><small>${esc(order.studentId || "-")} · ${esc(order.phone || "-")}</small></div><span class="status ${order.status}">${order.status}</span></div><p>${order.items.map(item=>`${esc(item.name)} × ${item.qty}`).join(" · ")}</p><div class="order-meta"><span>Pickup: <b>${esc(order.pickupTime)}</b></span><span>${money(order.totalPrice)}</span></div>${admin?`<select onchange="updateStatus('${order.id}',this.value)">${["Pending","Preparing","Ready","Collected","Cancelled"].map(status=>`<option ${order.status===status?"selected":""}>${status}</option>`).join("")}</select>`:""}</article>`; }
+function loginAdmin(){if(document.getElementById("adminPassword").value!=="admin123")return toast("Password সঠিক নয়।");sessionStorage.setItem("canteenAdmin","yes");renderAdmin();}
+function logoutAdmin(){sessionStorage.removeItem("canteenAdmin");renderAdmin();}
+async function renderAdmin(){if(!document.getElementById("loginBox"))return;const logged=sessionStorage.getItem("canteenAdmin")==="yes";document.getElementById("loginBox").hidden=logged;document.getElementById("dashboard").hidden=!logged;if(!logged)return;try{const [foods,allOrders]=await Promise.all([api("/api/menu"),api("/api/orders")]);const sales=allOrders.filter(order=>order.status!=="Cancelled").reduce((sum,order)=>sum+order.totalPrice,0);document.getElementById("stats").innerHTML=[[allOrders.length,"Total Orders"],[money(sales),"Total Sales"],[allOrders.filter(order=>order.status==="Ready").length,"Ready"],[foods.reduce((sum,item)=>sum+item.stock,0),"Food in Stock"]].map(([value,label])=>`<div class="stat"><b>${value}</b><span>${label}</span></div>`).join("");document.getElementById("adminMenu").innerHTML=foods.map(item=>`<div class="admin-line"><span><b>${esc(item.name)}</b><br><small>${money(item.price)} · Stock: ${item.stock} · ${item.available?"Available":"Hidden"}</small></span><div><input class="stock-input" type="number" min="0" value="${item.stock}" onchange="updateStock(${item.id},this.value)"><button class="secondary" onclick="toggleFood(${item.id},${!item.available})">${item.available?"Hide":"Show"}</button></div></div>`).join("");document.getElementById("ordersList").innerHTML=allOrders.length?allOrders.map(order=>orderCard(order,true)).join(""):"<p>এখনো কোনো order নেই।</p>";}catch(error){toast(error.message);}}
+async function addFood(){const name=document.getElementById("foodName").value.trim(),price=Number(document.getElementById("foodPrice").value),stock=Number(document.getElementById("foodStock").value),category=document.getElementById("foodCategory").value,description=document.getElementById("foodDescription").value.trim();try{await api("/api/menu",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,price,stock,category,description,emoji:icons[category]})});["foodName","foodPrice","foodStock","foodDescription"].forEach(id=>document.getElementById(id).value="");renderAdmin();toast("নতুন food item যোগ হয়েছে।");}catch(error){toast(error.message);}}
+async function toggleFood(id,available){try{await api(`/api/menu/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({available})});renderAdmin();}catch(error){toast(error.message);}}
+async function updateStock(id,stock){try{await api(`/api/menu/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({stock:Number(stock)})});renderAdmin();}catch(error){toast(error.message);}}
+async function updateStatus(id,status){try{await api(`/api/orders/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({status})});renderAdmin();}catch(error){toast(error.message);}}
+loadMenu();renderCart();renderAdmin();

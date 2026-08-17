@@ -3,30 +3,60 @@
     "id": 1,
     "name": "Chicken Biryani",
     "price": 120,
+    "stock": 20,
+    "category": "meal",
+    "description": "Freshly prepared fragrant rice with chicken",
+    "emoji": "🍛",
     "available": true
   },
   {
     "id": 2,
     "name": "Vegetable Khichuri",
     "price": 60,
+    "stock": 25,
+    "category": "meal",
+    "description": "Traditional vegetable rice dish",
+    "emoji": "🍛",
     "available": true
   },
   {
     "id": 3,
     "name": "Egg Sandwich",
     "price": 40,
+    "stock": 30,
+    "category": "snack",
+    "description": "Crispy toast with egg and cheese",
+    "emoji": "🥟",
     "available": true
   },
   {
     "id": 4,
     "name": "Singara (2 pcs)",
     "price": 20,
+    "stock": 35,
+    "category": "snack",
+    "description": "Golden fried singara with potato filling",
+    "emoji": "🥟",
     "available": true
   },
   {
     "id": 5,
     "name": "Cold Coffee",
     "price": 50,
+    "stock": 15,
+    "category": "drink",
+    "description": "Chilled coffee with ice cream",
+    "emoji": "🥤",
+    "available": true
+  },
+  {
+    "id": 6,
+    "name": "Singara big",
+    "price": 40,
+    "stock": 28,
+    "category": "snack",
+    "description": "Large singara with special potato filling",
+    "emoji": "🥟",
     "available": true
   }
 ]

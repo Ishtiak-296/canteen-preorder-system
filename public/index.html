@@ -1,41 +1,5 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8" />
-  <title>Canteen Preorder</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header>
-    <h1>🍛 Canteen Preorder System</h1>
-    <a href="admin.html">Admin Panel</a>
-  </header>
-
-  <main>
-    <div class="card">
-      <h2>Today's Menu</h2>
-      <div class="menu-grid" id="menuGrid">
-        <!-- menu items JS diye eikhane load hobe -->
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Your Order</h2>
-      <label>Your Name</label>
-      <input type="text" id="studentName" placeholder="e.g. Rahim" />
-
-      <label>Pickup Time</label>
-      <input type="time" id="pickupTime" />
-
-      <div id="cartItems" style="margin-top:14px;"></div>
-
-      <div class="cart-summary">
-        <strong>Total: ৳<span id="totalPrice">0</span></strong>
-        <button class="btn-primary" onclick="placeOrder()">Place Preorder</button>
-      </div>
-    </div>
-  </main>
-
-  <script src="script.js"></script>
-</body>
-</html>
+<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Canteen Preorder</title><link rel="stylesheet" href="style.css"></head><body>
+<header><a class="brand" href="index.html">🍽️ Canteen <b>Preorder</b></a><nav><a href="#track">My Orders</a><a href="admin.html">Admin</a><button class="cart-button" onclick="toggleCart()">🛒 Cart <span id="cartCount">0</span></button></nav></header>
+<main><section class="hero"><div><p class="eyebrow">PRE-ORDER • PICK UP • ENJOY</p><h1>লাইন ছাড়াই খাবার নিন।</h1><p>আগে অর্ডার দিন, নির্দিষ্ট সময়ে canteen থেকে সংগ্রহ করুন।</p></div><div class="hero-food">🍛</div></section><section class="toolbar"><input id="search" type="search" placeholder="🔍 খাবার খুঁজুন" oninput="renderMenu()"><div id="categories" class="chips"></div></section><section id="menuGrid" class="menu-grid"></section>
+<section id="track" class="card tracker"><p class="eyebrow">ORDER TRACKING</p><h2>আপনার অর্ডার দেখুন</h2><div class="row"><input id="trackPhone" type="tel" placeholder="01XXXXXXXXX"><button class="primary" onclick="trackOrders()">Track Order</button></div><div id="trackingResults"></div></section></main>
+<aside id="cartDrawer"><div class="drawer-head"><h2>আপনার Cart</h2><button type="button" class="round" onclick="toggleCart()">×</button></div><div id="cartItems"></div><p id="emptyCart" class="empty">Cart খালি আছে।</p><div id="checkout" hidden><div class="total"><span>Total</span><strong id="totalPrice">৳0</strong></div><h3>অর্ডারের তথ্য</h3><div class="form-grid"><input id="studentName" placeholder="আপনার নাম"><input id="studentId" placeholder="Student ID / Roll"><input id="phone" placeholder="01XXXXXXXXX"><input id="pickupTime" type="time"></div><select id="payment"><option>Cash on pickup</option><option>bKash (Demo)</option><option>Nagad (Demo)</option></select><button class="primary full" onclick="placeOrder()">Confirm Preorder</button></div></aside><div id="overlay" onclick="toggleCart()"></div><div id="toast"></div><script src="script.js"></script></body></html>

@@ -1,37 +1,33 @@
 [
   {
-    "id": "242-35-296",
+    "id": 1786955119860,
     "studentName": "Ishtiak",
+    "studentId": "CSE-2024-001",
+    "phone": "01712345678",
     "items": [
       {
+        "id": 1,
         "name": "Chicken Biryani",
         "price": 120,
-        "qty": 2
+        "qty": 3
       },
       {
+        "id": 2,
         "name": "Vegetable Khichuri",
         "price": 60,
         "qty": 1
       },
       {
-        "name": "Egg Sandwich",
-        "price": 40,
-        "qty": 3
-      },
-      {
-        "name": "Singara (2 pcs)",
-        "price": 20,
-        "qty": 4
-      },
-      {
+        "id": 5,
         "name": "Cold Coffee",
         "price": 50,
         "qty": 2
       }
     ],
-    "totalPrice": 500,
-    "pickupTime": "22:08",
-    "status": "Pending",
-    "createdAt": "2026-08-11T08:07:59.446Z"
+    "totalPrice": 520,
+    "pickupTime": "14:30",
+    "paymentMethod": "Cash on pickup",
+    "status": "Ready",
+    "createdAt": "2026-08-17T08:25:19.860Z"
   }
 ]
