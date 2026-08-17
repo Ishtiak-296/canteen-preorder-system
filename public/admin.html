@@ -1,2 +1,84 @@
-<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin - Canteen Preorder</title><link rel="stylesheet" href="style.css"></head><body>
-<header><a class="brand" href="index.html">🍽️ Canteen <b>Preorder</b></a><nav><a href="index.html">Student View</a></nav></header><main><section id="loginBox" class="card login"><p class="eyebrow">STAFF ACCESS</p><h1>Admin Login</h1><p>Demo password: <code>admin123</code></p><input id="adminPassword" type="password" placeholder="Password"><button class="primary full" onclick="loginAdmin()">Login</button></section><section id="dashboard" hidden><div class="dash-title"><div><p class="eyebrow">CANTEEN DASHBOARD</p><h1>আজকের রিপোর্ট</h1></div><button class="secondary" onclick="logoutAdmin()">Logout</button></div><div id="stats" class="stats"></div><div class="admin-grid"><section class="card"><h2>নতুন Food যোগ করুন</h2><div class="form-grid"><input id="foodName" placeholder="Food name"><input id="foodPrice" type="number" min="1" placeholder="Price"><input id="foodStock" type="number" min="0" placeholder="Stock"><select id="foodCategory"><option value="meal">Meal</option><option value="snack">Snack</option><option value="drink">Drink</option></select></div><input id="foodDescription" placeholder="Short description"><button class="primary" onclick="addFood()">Add Item</button></section><section class="card"><h2>Menu Management</h2><div id="adminMenu"></div></section></div><section class="card"><h2>All Orders</h2><div id="ordersList"></div></section></section></main><div id="toast"></div><script src="script.js"></script></body></html>
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin - Canteen Preorder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header>
+    <a class="brand" href="index.html">🍽️ Canteen <b>Preorder</b></a>
+    <nav>
+      <a href="index.html">Student View</a>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- LOGIN SECTION -->
+    <section id="loginBox" class="card login">
+      <p class="eyebrow">STAFF ACCESS</p>
+      <h1>Admin Login</h1>
+      <p>Demo password: <code>admin123</code></p>
+      <input id="adminPassword" type="password" placeholder="Password">
+      <button class="primary full" onclick="loginAdmin()">Login</button>
+    </section>
+
+    <!-- DASHBOARD (Hidden until logged in) -->
+    <section id="dashboard" hidden>
+      <!-- DASHBOARD HEADER -->
+      <div class="dash-title">
+        <div>
+          <p class="eyebrow">CANTEEN DASHBOARD</p>
+          <h1>আজকের রিপোর্ট</h1>
+        </div>
+        <button class="secondary" onclick="logoutAdmin()">Logout</button>
+      </div>
+
+      <!-- STATISTICS -->
+      <div id="stats" class="stats"></div>
+
+      <!-- ADMIN GRID: Add Food + Menu Management -->
+      <div class="admin-grid">
+        <!-- ADD NEW FOOD SECTION -->
+        <section class="card">
+          <h2>নতুন Food যোগ করুন</h2>
+          <div class="form-grid">
+            <input id="foodName" placeholder="Food name">
+            <input id="foodPrice" type="number" min="1" placeholder="Price">
+            <input id="foodStock" type="number" min="0" placeholder="Stock">
+            <select id="foodCategory">
+              <option value="meal">Meal</option>
+              <option value="snack">Snack</option>
+              <option value="drink">Drink</option>
+            </select>
+          </div>
+          <input id="foodDescription" placeholder="Short description">
+          <button class="primary" onclick="addFood()">Add Item</button>
+        </section>
+
+        <!-- MENU MANAGEMENT SECTION -->
+        <section class="card">
+          <h2>Menu Management</h2>
+          <div id="adminMenu"></div>
+        </section>
+      </div>
+
+      <!-- ORDERS SECTION -->
+      <section class="card">
+        <h2>All Orders</h2>
+        <div id="ordersList"></div>
+      </section>
+    </section>
+  </main>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast"></div>
+
+  <!-- JAVASCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>
